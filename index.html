@@ -231,7 +231,7 @@
                     document.getElementById('message').innerText = 'Congratulations! You guessed the word!';
                     endGame();
                 } else if (++currentRow >= maxAttempts) {
-                    document.getElementById('message').innerText = Game over! The word was "${correctWord}".;
+                    document.getElementById('message').innerText = "Game over! The word was "${correctWord}.";
                     endGame();
                 } else {
                     guessInput.value = '';
