@@ -42,8 +42,8 @@
 
         .board {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(30px, 1fr)); /* Reduced tile size */
-            grid-gap: 2px; /* Adjusted gap */
+            grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
+            grid-gap: 4px;
             margin-bottom: 20px;
             justify-content: center;
             opacity: 0;
@@ -51,13 +51,13 @@
         }
 
         .tile {
-            width: 30px; /* Reduced tile size */
-            height: 30px; /* Reduced tile size */
+            width: 40px;
+            height: 40px;
             border: 2px solid #E65724;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 18px; /* Reduced font size */
+            font-size: 20px;
             text-transform: uppercase;
             background-color: rgba(51, 51, 51, 0.7);
             transition: background-color 0.3s, transform 0.6s ease-in-out;
@@ -85,7 +85,7 @@
         input[type="text"], input[type="number"] {
             padding: 8px;
             font-size: 14px;
-            margin-bottom: 10px; /* Adjusted margin for vertical spacing */
+            margin-bottom: 10px;
             width: 200px;
             text-transform: uppercase;
             color: black;
@@ -110,6 +110,13 @@
 
         .bottom-options {
             margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .bottom-options > * {
+            margin: 5px 0;
         }
 
         h3 {
@@ -130,17 +137,15 @@
 
         <div class="bottom-options">
             <input type="number" id="wordLengthInput" placeholder="Enter word length" min="3" max="9" />
-            <br /> <!-- Added break for vertical alignment -->
             <input type="number" id="maxGuessesInput" placeholder="Set guess limit" min="3" max="15" />
-            <br /> <!-- Added break for vertical alignment -->
             <input type="text" id="customWordInput" placeholder="Enter custom word" />
-            <br />
+
             <div id="randomLengthContainer">
                 <label>
                     <input type="checkbox" id="randomLengthMode"> Random Length Mode
                 </label>
             </div>
-            <br />
+            
             <button id="newWordButton" onclick="startGame()">Start New Game</button>
         </div>
 
@@ -171,7 +176,7 @@
                 maxAttempts = correctWord.length;
                 createBoard(correctWord.length);
                 document.getElementById('guessInput').setAttribute('maxlength', correctWord.length);
-                document.getElementById('guessInput').setAttribute('placeholder', Enter a ${correctWord.length}-letter word);
+                document.getElementById('guessInput').setAttribute('placeholder', `Enter a ${correctWord.length}-letter word`);
                 currentRow = 0;
                 document.getElementById('message').innerText = '';
                 document.getElementById('guessInput').value = '';
@@ -186,11 +191,11 @@
         function createBoard(wordLength) {
             const board = document.getElementById('board');
             board.innerHTML = '';
-            board.style.gridTemplateColumns = repeat(${wordLength}, 40px);
+            board.style.gridTemplateColumns = `repeat(${wordLength}, 40px)`;
             for (let i = 0; i < maxAttempts * wordLength; i++) {
                 const tile = document.createElement('div');
                 tile.classList.add('tile');
-                tile.setAttribute('id', tile-${i});
+                tile.setAttribute('id', `tile-${i}`);
                 board.appendChild(tile);
             }
             board.style.opacity = '1';
@@ -201,7 +206,7 @@
             const currentGuess = guessInput.value.toLowerCase();
 
             if (currentGuess.length !== correctWord.length) {
-                document.getElementById('message').innerText = Please enter a ${correctWord.length}-letter word.;
+                document.getElementById('message').innerText = `Please enter a ${correctWord.length}-letter word.`;
                 return;
             }
             if (currentRow >= maxAttempts) {
@@ -212,7 +217,7 @@
             const startIndex = currentRow * correctWord.length;
 
             for (let i = 0; i < correctWord.length; i++) {
-                const tile = document.getElementById(tile-${startIndex + i});
+                const tile = document.getElementById(`tile-${startIndex + i}`);
                 tile.innerText = currentGuess[i];
                 setTimeout(() => {
                     tile.classList.add('flip');
@@ -231,7 +236,7 @@
                     document.getElementById('message').innerText = 'Congratulations! You guessed the word!';
                     endGame();
                 } else if (++currentRow >= maxAttempts) {
-                    document.getElementById('message').innerText = "Game over! The word was "${correctWord}.";
+                    document.getElementById('message').innerText = `Game over! The word was "${correctWord}".`;
                     endGame();
                 } else {
                     guessInput.value = '';
@@ -265,7 +270,20 @@
                     document.getElementById('message').innerText = 'Please enter a length between 3 and 9.';
                     return;
                 }
-                fetchRandomWord(wordLength);
+
+                const customWord = document.getElementById('customWordInput').value.toLowerCase();
+                if (customWord && customWord.length === wordLength) {
+                    correctWord = customWord;
+                    createBoard(wordLength);
+                    maxAttempts = parseInt(document.getElementById('maxGuessesInput').value) || correctWord.length;
+                    document.getElementById('message').innerText = '';
+                    showGuessingInputs();
+                } else if (customWord) {
+                    document.getElementById('message').innerText = `Please enter a ${wordLength}-letter custom word.`;
+                    return;
+                } else {
+                    fetchRandomWord(wordLength);
+                }
             }
         }
 
