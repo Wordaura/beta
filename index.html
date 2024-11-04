@@ -154,149 +154,153 @@
 
     <script>
         let correctWord = ''; 
-        let currentRow = 0;
-        let maxAttempts = 6;
-        let wordLength = 0;
-        const delayBetweenFlips = 500;
+let currentRow = 0;
+let maxAttempts = 6;
+let wordLength = 0;
+const delayBetweenFlips = 500;
 
-        async function fetchRandomWord(wordLength) {
-            try {
-                let foundWord = false;
-                while (!foundWord) {
-                    const response = await fetch('https://random-word-api.vercel.app/api?words=10');
-                    const data = await response.json();
+async function fetchRandomWord(wordLength) {
+    try {
+        let foundWord = false;
+        while (!foundWord) {
+            const response = await fetch('https://random-word-api.vercel.app/api?words=10');
+            const data = await response.json();
 
-                    const matchingWord = data.find(word => word.length === wordLength);
-                    if (matchingWord) {
-                        correctWord = matchingWord.toLowerCase();
-                        foundWord = true;
-                    }
-                }
-
-                maxAttempts = correctWord.length;
-                createBoard(correctWord.length);
-                document.getElementById('guessInput').setAttribute('maxlength', correctWord.length);
-                document.getElementById('guessInput').setAttribute('placeholder', `Enter a ${correctWord.length}-letter word`);
-                currentRow = 0;
-                document.getElementById('message').innerText = '';
-                document.getElementById('guessInput').value = '';
-
-                showGuessingInputs();
-            } catch (error) {
-                document.getElementById('message').innerText = 'Failed to fetch a word. Please try again.';
-                console.error('Error fetching word:', error);
+            const matchingWord = data.find(word => word.length === wordLength);
+            if (matchingWord) {
+                correctWord = matchingWord.toLowerCase();
+                foundWord = true;
             }
         }
 
-        function createBoard(wordLength) {
-            const board = document.getElementById('board');
-            board.innerHTML = '';
-            board.style.gridTemplateColumns = `repeat(${wordLength}, 40px)`;
-            for (let i = 0; i < maxAttempts * wordLength; i++) {
-                const tile = document.createElement('div');
-                tile.classList.add('tile');
-                tile.setAttribute('id', `tile-${i}`);
-                board.appendChild(tile);
-            }
-            board.style.opacity = '1';
-        }
+        // Set maxAttempts based on input or fallback to word length if no limit is provided
+        const customGuessLimit = parseInt(document.getElementById('maxGuessesInput').value);
+        maxAttempts = customGuessLimit >= 3 && customGuessLimit <= 15 ? customGuessLimit : correctWord.length;
+        
+        createBoard(correctWord.length);
+        document.getElementById('guessInput').setAttribute('maxlength', correctWord.length);
+        document.getElementById('guessInput').setAttribute('placeholder', `Enter a ${correctWord.length}-letter word`);
+        currentRow = 0;
+        document.getElementById('message').innerText = '';
+        document.getElementById('guessInput').value = '';
 
-        async function makeGuess() {
-            const guessInput = document.getElementById('guessInput');
-            const currentGuess = guessInput.value.toLowerCase();
+        showGuessingInputs();
+    } catch (error) {
+        document.getElementById('message').innerText = 'Failed to fetch a word. Please try again.';
+        console.error('Error fetching word:', error);
+    }
+}
 
-            if (currentGuess.length !== correctWord.length) {
-                document.getElementById('message').innerText = `Please enter a ${correctWord.length}-letter word.`;
-                return;
-            }
-            if (currentRow >= maxAttempts) {
-                document.getElementById('message').innerText = 'Game over! No more attempts left.';
-                return;
-            }
+function createBoard(wordLength) {
+    const board = document.getElementById('board');
+    board.innerHTML = '';
+    board.style.gridTemplateColumns = `repeat(${wordLength}, 40px)`;
+    for (let i = 0; i < maxAttempts * wordLength; i++) {
+        const tile = document.createElement('div');
+        tile.classList.add('tile');
+        tile.setAttribute('id', `tile-${i}`);
+        board.appendChild(tile);
+    }
+    board.style.opacity = '1';
+}
 
-            const startIndex = currentRow * correctWord.length;
+async function makeGuess() {
+    const guessInput = document.getElementById('guessInput');
+    const currentGuess = guessInput.value.toLowerCase();
 
-            for (let i = 0; i < correctWord.length; i++) {
-                const tile = document.getElementById(`tile-${startIndex + i}`);
-                tile.innerText = currentGuess[i];
-                setTimeout(() => {
-                    tile.classList.add('flip');
-                    setTimeout(() => {
-                        tile.classList.remove('flip');
-                        tile.classList.add(
-                            currentGuess[i] === correctWord[i] ? 'correct' :
-                            correctWord.includes(currentGuess[i]) ? 'present' : 'wrong'
-                        );
-                    }, 300);
-                }, i * delayBetweenFlips);
-            }
+    if (currentGuess.length !== correctWord.length) {
+        document.getElementById('message').innerText = `Please enter a ${correctWord.length}-letter word.`;
+        return;
+    }
+    if (currentRow >= maxAttempts) {
+        document.getElementById('message').innerText = 'Game over! No more attempts left.';
+        return;
+    }
 
+    const startIndex = currentRow * correctWord.length;
+
+    for (let i = 0; i < correctWord.length; i++) {
+        const tile = document.getElementById(`tile-${startIndex + i}`);
+        tile.innerText = currentGuess[i];
+        setTimeout(() => {
+            tile.classList.add('flip');
             setTimeout(() => {
-                if (currentGuess === correctWord) {
-                    document.getElementById('message').innerText = 'Congratulations! You guessed the word!';
-                    endGame();
-                } else if (++currentRow >= maxAttempts) {
-                    document.getElementById('message').innerText = `Game over! The word was "${correctWord}".`;
-                    endGame();
-                } else {
-                    guessInput.value = '';
-                }
-            }, correctWord.length * delayBetweenFlips + 500);
+                tile.classList.remove('flip');
+                tile.classList.add(
+                    currentGuess[i] === correctWord[i] ? 'correct' :
+                    correctWord.includes(currentGuess[i]) ? 'present' : 'wrong'
+                );
+            }, 300);
+        }, i * delayBetweenFlips);
+    }
+
+    setTimeout(() => {
+        if (currentGuess === correctWord) {
+            document.getElementById('message').innerText = 'Congratulations! You guessed the word!';
+            endGame();
+        } else if (++currentRow >= maxAttempts) {
+            document.getElementById('message').innerText = `Game over! The word was "${correctWord}".`;
+            endGame();
+        } else {
+            guessInput.value = '';
+        }
+    }, correctWord.length * delayBetweenFlips + 500);
+}
+
+function endGame() {
+    const setupElements = [
+        'wordLengthInput', 'maxGuessesInput', 'customWordInput', 
+        'randomLengthContainer', 'newWordButton'
+    ];
+    setupElements.forEach(id => document.getElementById(id).classList.remove('hidden'));
+
+    document.getElementById('guessInput').classList.add('hidden');
+    document.getElementById('submitGuessButton').classList.add('hidden');
+}
+
+function startGame() {
+    document.getElementById("gameLogo").classList.add("hidden");
+    document.getElementById('message').innerText = '';
+    document.getElementById('guessInput').value = '';
+    currentRow = 0;
+
+    if (document.getElementById('randomLengthMode').checked) {
+        const randomLength = Math.floor(Math.random() * (9 - 3 + 1)) + 3;
+        fetchRandomWord(randomLength);
+    } else {
+        wordLength = parseInt(document.getElementById('wordLengthInput').value);
+        if (wordLength < 3 || wordLength > 9) {
+            document.getElementById('message').innerText = 'Please enter a length between 3 and 9.';
+            return;
         }
 
-        function endGame() {
-            const setupElements = [
-                'wordLengthInput', 'maxGuessesInput', 'customWordInput', 
-                'randomLengthContainer', 'newWordButton'
-            ];
-            setupElements.forEach(id => document.getElementById(id).classList.remove('hidden'));
-
-            document.getElementById('guessInput').classList.add('hidden');
-            document.getElementById('submitGuessButton').classList.add('hidden');
-        }
-
-        function startGame() {
-            document.getElementById("gameLogo").classList.add("hidden");
+        const customWord = document.getElementById('customWordInput').value.toLowerCase();
+        if (customWord && customWord.length === wordLength) {
+            correctWord = customWord;
+            createBoard(wordLength);
+            const customGuessLimit = parseInt(document.getElementById('maxGuessesInput').value);
+            maxAttempts = customGuessLimit >= 3 && customGuessLimit <= 15 ? customGuessLimit : correctWord.length;
             document.getElementById('message').innerText = '';
-            document.getElementById('guessInput').value = '';
-            currentRow = 0;
-
-            if (document.getElementById('randomLengthMode').checked) {
-                const randomLength = Math.floor(Math.random() * (9 - 3 + 1)) + 3;
-                fetchRandomWord(randomLength);
-            } else {
-                wordLength = parseInt(document.getElementById('wordLengthInput').value);
-                if (wordLength < 3 || wordLength > 9) {
-                    document.getElementById('message').innerText = 'Please enter a length between 3 and 9.';
-                    return;
-                }
-
-                const customWord = document.getElementById('customWordInput').value.toLowerCase();
-                if (customWord && customWord.length === wordLength) {
-                    correctWord = customWord;
-                    createBoard(wordLength);
-                    maxAttempts = parseInt(document.getElementById('maxGuessesInput').value) || correctWord.length;
-                    document.getElementById('message').innerText = '';
-                    showGuessingInputs();
-                } else if (customWord) {
-                    document.getElementById('message').innerText = `Please enter a ${wordLength}-letter custom word.`;
-                    return;
-                } else {
-                    fetchRandomWord(wordLength);
-                }
-            }
+            showGuessingInputs();
+        } else if (customWord) {
+            document.getElementById('message').innerText = `Please enter a ${wordLength}-letter custom word.`;
+            return;
+        } else {
+            fetchRandomWord(wordLength);
         }
+    }
+}
 
-        function showGuessingInputs() {
-            const setupElements = [
-                'wordLengthInput', 'maxGuessesInput', 'customWordInput', 
-                'randomLengthContainer', 'newWordButton'
-            ];
-            setupElements.forEach(id => document.getElementById(id).classList.add('hidden'));
+function showGuessingInputs() {
+    const setupElements = [
+        'wordLengthInput', 'maxGuessesInput', 'customWordInput', 
+        'randomLengthContainer', 'newWordButton'
+    ];
+    setupElements.forEach(id => document.getElementById(id).classList.add('hidden'));
 
-            document.getElementById('guessInput').classList.remove('hidden');
-            document.getElementById('submitGuessButton').classList.remove('hidden');
-        }
+    document.getElementById('guessInput').classList.remove('hidden');
+    document.getElementById('submitGuessButton').classList.remove('hidden');
+}
     </script>
 </body>
 </html>
