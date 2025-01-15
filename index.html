@@ -158,6 +158,7 @@ let currentRow = 0;
 let maxAttempts = 6;
 let wordLength = 0;
 const delayBetweenFlips = 500;
+const socket = new WebSocket('wss://wordaura-client.onrender.com');
 
 async function fetchRandomWord(wordLength) {
     try {
